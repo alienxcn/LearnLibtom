@@ -10,6 +10,8 @@
 
 int AES_Test();
 
+int DSA_Test();
+
 int AES_ECB_Test();
 
 int AES_CBC_Test();

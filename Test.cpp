@@ -6,15 +6,17 @@
 #include <stdio.h>
 #include <string.h>
 #include "AES.h"
+#include "DSA.h"
 
 int AES_Test() {
-
     AES_ECB_Test();
-
     AES_CBC_Test();
-
     AES_CTR_Test();
+    return 0;
+}
 
+int DSA_Test(){
+    DSA_test();
     return 0;
 }
 

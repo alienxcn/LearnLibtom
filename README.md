@@ -4,3 +4,4 @@
 
 - 使用Makefile直接执行make命令，该Makefile可以在MacOS or Linux上运行。
 - 使用CLion打开CMakeLists.txt，默认是基于MacOS，若使用Linux，需要把CMakeLists.txt文件中`LINK_DIRECTORIES(libs/mac)`更改为`LINK_DIRECTORIES(libs/linux)` 
+- 清除中间文件：make clean
