@@ -16,7 +16,7 @@ int AES_Test() {
 }
 
 int DSA_Test(){
-    DSA_test();
+    dsa_testp();
     return 0;
 }
 

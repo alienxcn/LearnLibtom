@@ -7,7 +7,6 @@
 
 #include "Utils.h"
 
-
 int AES_Test();
 
 int DSA_Test();

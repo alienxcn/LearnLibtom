@@ -2,11 +2,11 @@
 // Created by alienx on 2019/9/4.
 //
 
-#ifndef LIBTOM_DEMO_DSA_H
-#define LIBTOM_DEMO_DSA_H
+#ifndef LIBTOM_DEMO_DSA
+#define LIBTOM_DEMO_DSA
 
-#include <stdint.h>
+#include "common.h"
 
-int DSA_test(void);
+int dsa_testp(void);
 
-#endif //LIBTOM_DEMO_DSA_H
+#endif //LIBTOM_DEMO_DSA
