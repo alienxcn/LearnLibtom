@@ -103,6 +103,7 @@ int pkcs_5_alg2(const unsigned char *password, unsigned long password_len,
 int pkcs_5_test (void);
 #endif  /* LTC_PKCS_5 */
 
-/* ref:         $Format:%D$ */
-/* git commit:  $Format:%H$ */
-/* commit time: $Format:%ai$ */
+
+/* ref:         HEAD -> develop */
+/* git commit:  a1f6312416ef6cd183ee62db58b640dc2d7ec1f4 */
+/* commit time: 2019-09-04 13:44:47 +0200 */

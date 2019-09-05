@@ -429,18 +429,11 @@ static inline ulong64 ROR64(ulong64 word, int i)
    #define LTC_UNUSED_PARAM(x) (void)(x)
 #endif
 
-/* extract a byte portably */
-#ifdef _MSC_VER
-   #define byte(x, n) ((unsigned char)((x) >> (8 * (n))))
-#else
-   #define byte(x, n) (((x) >> (8 * (n))) & 255)
-#endif
-
 /* there is no snprintf before Visual C++ 2015 */
 #if defined(_MSC_VER) && _MSC_VER < 1900
 #define snprintf _snprintf
 #endif
 
-/* ref:         $Format:%D$ */
-/* git commit:  $Format:%H$ */
-/* commit time: $Format:%ai$ */
+/* ref:         HEAD -> develop */
+/* git commit:  a1f6312416ef6cd183ee62db58b640dc2d7ec1f4 */
+/* commit time: 2019-09-04 13:44:47 +0200 */

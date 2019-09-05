@@ -27,13 +27,15 @@ extern "C" {
 
 /* version */
 #define CRYPT   0x0118
-#define SCRYPT  "1.18.0"
+#define SCRYPT  "1.18.2-develop"
 
 /* max size of either a cipher/hash block or symmetric key [largest of the two] */
-#define MAXBLOCKSIZE  128
+#define MAXBLOCKSIZE  144
 
+#ifndef TAB_SIZE
 /* descriptor table size */
-#define TAB_SIZE      32
+#define TAB_SIZE      34
+#endif
 
 /* error codes [will be expanded in future releases] */
 enum {
@@ -67,7 +69,7 @@ enum {
 
    CRYPT_OVERFLOW,         /* An overflow of a value was detected/prevented */
 
-   CRYPT_UNUSED1,          /* UNUSED1 */
+   CRYPT_PK_ASN1_ERROR,    /* An error occurred while en- or decoding ASN.1 data */
 
    CRYPT_INPUT_TOO_LONG,   /* The input was longer than expected. */
 
@@ -98,6 +100,6 @@ enum {
 #endif /* TOMCRYPT_H_ */
 
 
-/* ref:         $Format:%D$ */
-/* git commit:  $Format:%H$ */
-/* commit time: $Format:%ai$ */
+/* ref:         HEAD -> develop */
+/* git commit:  a1f6312416ef6cd183ee62db58b640dc2d7ec1f4 */
+/* commit time: 2019-09-04 13:44:47 +0200 */

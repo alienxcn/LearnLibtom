@@ -5,8 +5,8 @@
 #ifndef LIBTOM_DEMO_DSA_H
 #define LIBTOM_DEMO_DSA_H
 
-#include "common.h"
+#include <tomcrypt.h>
 
-int dsa_test(void);
+int dsa_testp(void);
 
 #endif //LIBTOM_DEMO_DSA_H

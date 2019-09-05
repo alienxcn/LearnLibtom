@@ -9,24 +9,28 @@
 
 /* ---- LTC_BASE64 Routines ---- */
 #ifdef LTC_BASE64
-int base64_encode(const unsigned char *in,  unsigned long len,
-                        unsigned char *out, unsigned long *outlen);
+int base64_encode(const unsigned char *in,  unsigned long inlen,
+                                 char *out, unsigned long *outlen);
 
-int base64_decode(const unsigned char *in,  unsigned long len,
+int base64_decode(const char *in,  unsigned long inlen,
                         unsigned char *out, unsigned long *outlen);
-int base64_strict_decode(const unsigned char *in,  unsigned long len,
+int base64_strict_decode(const char *in,  unsigned long inlen,
+                        unsigned char *out, unsigned long *outlen);
+int base64_sane_decode(const char *in,  unsigned long inlen,
                         unsigned char *out, unsigned long *outlen);
 #endif
 
 #ifdef LTC_BASE64_URL
-int base64url_encode(const unsigned char *in,  unsigned long len,
-                        unsigned char *out, unsigned long *outlen);
+int base64url_encode(const unsigned char *in,  unsigned long inlen,
+                                    char *out, unsigned long *outlen);
 int base64url_strict_encode(const unsigned char *in,  unsigned long inlen,
-                        unsigned char *out, unsigned long *outlen);
+                                           char *out, unsigned long *outlen);
 
-int base64url_decode(const unsigned char *in,  unsigned long len,
+int base64url_decode(const char *in,  unsigned long inlen,
                         unsigned char *out, unsigned long *outlen);
-int base64url_strict_decode(const unsigned char *in,  unsigned long len,
+int base64url_strict_decode(const char *in,  unsigned long inlen,
+                        unsigned char *out, unsigned long *outlen);
+int base64url_sane_decode(const char *in,  unsigned long inlen,
                         unsigned char *out, unsigned long *outlen);
 #endif
 
@@ -39,11 +43,20 @@ typedef enum {
    BASE32_CROCKFORD = 3
 } base32_alphabet;
 int base32_encode(const unsigned char *in,  unsigned long inlen,
+                                 char *out, unsigned long *outlen,
+                        base32_alphabet id);
+int base32_decode(const          char *in,  unsigned long inlen,
                         unsigned char *out, unsigned long *outlen,
                         base32_alphabet id);
-int base32_decode(const unsigned char *in,  unsigned long inlen,
-                        unsigned char *out, unsigned long *outlen,
-                        base32_alphabet id);
+#endif
+
+/* ---- BASE16 Routines ---- */
+#ifdef LTC_BASE16
+int base16_encode(const unsigned char *in,  unsigned long  inlen,
+                                 char *out, unsigned long *outlen,
+                        unsigned int   options);
+int base16_decode(const          char *in,  unsigned long  inlen,
+                        unsigned char *out, unsigned long *outlen);
 #endif
 
 /* ===> LTC_HKDF -- RFC5869 HMAC-based Key Derivation Function <=== */
@@ -71,7 +84,7 @@ int hkdf(int hash_idx,
 
 /* ---- MEM routines ---- */
 int mem_neq(const void *a, const void *b, size_t len);
-void zeromem(volatile void *dst, size_t len);
+void zeromem(volatile void *out, size_t outlen);
 void burn_stack(unsigned long len);
 
 const char *error_to_string(int err);
@@ -107,7 +120,7 @@ typedef struct adler32_state_s
 
 void adler32_init(adler32_state *ctx);
 void adler32_update(adler32_state *ctx, const unsigned char *input, unsigned long length);
-void adler32_finish(adler32_state *ctx, void *hash, unsigned long size);
+void adler32_finish(const adler32_state *ctx, void *hash, unsigned long size);
 int adler32_test(void);
 #endif
 
@@ -119,12 +132,47 @@ typedef struct crc32_state_s
 
 void crc32_init(crc32_state *ctx);
 void crc32_update(crc32_state *ctx, const unsigned char *input, unsigned long length);
-void crc32_finish(crc32_state *ctx, void *hash, unsigned long size);
+void crc32_finish(const crc32_state *ctx, void *hash, unsigned long size);
 int crc32_test(void);
 #endif
 
+
+#ifdef LTC_PADDING
+
+enum padding_type {
+   LTC_PAD_PKCS7        = 0x0000U,
+#ifdef LTC_RNG_GET_BYTES
+   LTC_PAD_ISO_10126    = 0x1000U,
+#endif
+   LTC_PAD_ANSI_X923    = 0x2000U,
+   LTC_PAD_ONE_AND_ZERO = 0x8000U,
+   LTC_PAD_ZERO         = 0x9000U,
+   LTC_PAD_ZERO_ALWAYS  = 0xA000U,
+};
+
+int padding_pad(unsigned char *data, unsigned long length, unsigned long* padded_length, unsigned long mode);
+int padding_depad(const unsigned char *data, unsigned long *length, unsigned long mode);
+#endif  /* LTC_PADDING */
+
+#ifdef LTC_SSH
+typedef enum ssh_data_type_ {
+   LTC_SSHDATA_BYTE,
+   LTC_SSHDATA_BOOLEAN,
+   LTC_SSHDATA_UINT32,
+   LTC_SSHDATA_UINT64,
+   LTC_SSHDATA_STRING,
+   LTC_SSHDATA_MPINT,
+   LTC_SSHDATA_NAMELIST,
+   LTC_SSHDATA_EOL
+} ssh_data_type;
+
+/* VA list handy helpers with tuples of <type, data> */
+int ssh_encode_sequence_multi(unsigned char *out, unsigned long *outlen, ...);
+int ssh_decode_sequence_multi(const unsigned char *in, unsigned long inlen, ...);
+#endif /* LTC_SSH */
+
 int compare_testvector(const void* is, const unsigned long is_len, const void* should, const unsigned long should_len, const char* what, int which);
 
-/* ref:         $Format:%D$ */
-/* git commit:  $Format:%H$ */
-/* commit time: $Format:%ai$ */
+/* ref:         HEAD -> develop */
+/* git commit:  a1f6312416ef6cd183ee62db58b640dc2d7ec1f4 */
+/* commit time: 2019-09-04 13:44:47 +0200 */

@@ -3,14 +3,14 @@ LD = cc
 SRCS = $(wildcard *.cpp)
 OBJS = $(patsubst %.cpp, %.o, $(SRCS))
 
-CFLAGS = -Wall -O2
+CFLAGS = -Wall -O2 -DTFM_DESC
 INCLUDE = -I./include
 
 OS = $(shell uname -s | tr [A-Z] [a-z])
 #$(info OS=$(OS))
 
 ifeq ($(OS), darwin)
-LIB = -L./libs/mac -ltomcrypt
+LIB = -L./libs/mac -ltomcrypt -ltfm
 endif
 
 ifeq ($(OS), linux)
