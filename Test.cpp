@@ -16,7 +16,8 @@ int AES_Test() {
 }
 
 int DSA_Test(){
-    dsa_testp();
+    printf("DSA Test:\n");
+    dsa_test();
     return 0;
 }
 
