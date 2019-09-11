@@ -123,4 +123,5 @@ int DSA_encrypt_message(const unsigned char* msg, unsigned long msg_len, unsigne
 int DSA_decrypt_messgae(const unsigned char* buff, unsigned long buff_len, unsigned char* orimsg, unsigned long* orimsg_len, const dsa_key* prikey);
 int DSA_sign_hash(const unsigned char* in, unsigned long in_len, unsigned char* out, unsigned long* out_len, const dsa_key* prikey);
 int DSA_sign_verify(const unsigned char* sig, unsigned long sig_len, const unsigned char* hash, unsigned long hash_len, int* stat, const dsa_key* prikey);
+
 #endif //LIBTOM_DEMO_DSA_H

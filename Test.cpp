@@ -59,6 +59,22 @@ int DSA_Test(){
     return 0;
 }
 
+int DSA_Batch_Test(){
+    ltc_mp = tfm_desc;
+    dsa_key key1, key2;
+    int stat1 = 0, stat2 = 0;
+    unsigned char msg1[16], out1[1024];
+    unsigned char msg2[16], out2[1024];
+    unsigned long msg1_len = sizeof(msg1_len), msg2_len = sizeof(msg2_len);
+    unsigned long x1 = sizeof(out1), x2 = sizeof(out2);
+
+    DSA_generator_from_pqg_random(&key1);
+    DSA_generator_from_pqg_random(&key2);
+
+    DSA_sign_hash(msg1, msg1_len, out1, &x1, &key1);
+    DSA_sign_hash(msg1, msg1_len, out1, &x1, &key1);
+}
+
 int AES_ECB_Test() {
     printf("\nAES_ECB_Test\n");
     unsigned char key[]="1234567890123456";
