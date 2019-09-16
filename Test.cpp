@@ -61,18 +61,37 @@ int DSA_Test(){
 
 int DSA_Batch_Test(){
     ltc_mp = tfm_desc;
-    dsa_key key1, key2;
-    int stat1 = 0, stat2 = 0;
-    unsigned char msg1[16], out1[1024];
-    unsigned char msg2[16], out2[1024];
-    unsigned long msg1_len = sizeof(msg1_len), msg2_len = sizeof(msg2_len);
-    unsigned long x1 = sizeof(out1), x2 = sizeof(out2);
+    const int para_len = 2;
+    dsa_key key[para_len];
+    int stat = 0;
+    unsigned char msg[para_len][16];
+    unsigned char out[para_len][1024];
+    unsigned long msg_len[para_len] = {16, 16};
+    unsigned long x[para_len] = {1024, 1024};
 
-    DSA_generator_from_pqg_random(&key1);
-    DSA_generator_from_pqg_random(&key2);
+    dsa_key prikey, pubkey;
+    const char *hex_g = "3B92E4FF5929150B08995A7BF2AD1440556FA047FF9099B344B3D4FC451505AE6722439CBA3710A5894737ECCCF5AEADA8B47A35CB9D935CEDE6B07E9694C4A60C7DD6708A094F814A0EC213FBEB16BFEAA4F456FF723005DE8A443FBEC6852655D62D1D1EDB15DAA445833C1797980B8D87F3490D90BDA9AB676E87687223DC";
+    const char *hex_p = "C50A37515CABD618D5A270BD4A6F6B4AF9E139950F2B99387D9A64D64CB5967ADCEDACA8ACC61B655ADEDB0061251A182CEEA10790625E4D123190C70321FA09E7B173D78EAFDBFDBFB3EFADD1A12A036DE706924A852AFF7A0166531FEAC66741845AC06CED62F9C2626205A4FA48A066EC35C9A811FEB981ABEEBE31B6BFCF";
+    const char *hex_q = "AA5BD7F4E5062413E58835CA00C7A635716194C5";
+    const char *hex_x = "9936E5E4E9FB28BE91F5065FE8C935B3F5D81FC5";
+    const char *hex_y = "5316B0FBBF598A5E5595C14FAC43B80853E6CF0D9223FAB184595239BFCBF22D383ADD935205497E2B12C46173E36F54BD96E5A7AAA95A58A4B767D2C0BDC81EB13A124F98C005EF395D6ABAB70B3BD8B795DD796EA2D28473470388B464D9B9B84FF1C934BBF97366F57C2E11FEC331E60838596781EB6D4127D70D74AFA035";
+    DSA_generator_from_pqg(hex_g, hex_p, hex_q, hex_x, hex_y, &prikey, &pubkey);
+    key[0] = prikey;
+    key[1] = prikey;
 
-    DSA_sign_hash(msg1, msg1_len, out1, &x1, &key1);
-    DSA_sign_hash(msg1, msg1_len, out1, &x1, &key1);
+    for (int i = 0; i < para_len; i++) {
+        // DSA_generator_from_pqg_random(&(key[i]));
+        DSA_sign_NEO(msg[i], msg_len[i], out[i], &(x[i]), &(key[i]));
+    }
+    // 中断
+    DSA_verify_NEO((const unsigned char**)out, x, (const unsigned char**)msg, msg_len, &stat, key, para_len);
+    
+    if (stat == 1) {
+        printf("DSA Sign NEO Successed!\n");
+    } else {
+        printf("DSA Sign NEO Failed!\n");
+    }
+    return 0;
 }
 
 int AES_ECB_Test() {
