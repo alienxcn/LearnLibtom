@@ -392,94 +392,6 @@ ERRBUF:
    return err;
 }
 
-int DSA_Batch_verify_hash_raw(void* r[], void* s[], const unsigned char* hash[], unsigned long hashlen[], int* stat, const dsa_key prikey[], int para_len){
-   const int plen = para_len;
-   void *w[plen], *v[plen], *u1[plen], *u2[plen];
-   void *Left, *Right;
-   int err;
-
-   LTC_ARGCHK(r != NULL);
-   LTC_ARGCHK(s != NULL);
-   LTC_ARGCHK(stat != NULL);
-   LTC_ARGCHK(prikey != NULL);
-
-   *stat = 0;
-   mp_init_multi(&Left, &Right, NULL);
-
-   for (int i = 0; i < plen; i++) {
-      if ((err = mp_init_multi(&(w[i]), &(v[i]), &(u1[i]), &(u2[i]), NULL)) != CRYPT_OK) {
-         return err;
-      }
-      // r和s不能为空。(原始DSA不能大于q)
-      /*
-      if (mp_cmp_d(r, 0) != LTC_MP_GT || mp_cmp_d(s, 0) != LTC_MP_GT || mp_cmp(r, prikey->q) != LTC_MP_LT || mp_cmp(s, prikey->q) != LTC_MP_LT) {
-         err = CRYPT_INVALID_PACKET;
-         goto error;
-      }
-      */
-      if (mp_cmp_d(r[i], 0) != LTC_MP_GT || mp_cmp_d(s[i], 0) != LTC_MP_GT) {
-         err = CRYPT_INVALID_PACKET;
-         goto error;
-      }
-
-      hashlen[i] = MIN(hashlen[i], (unsigned long)(prikey[i].qord));
-
-      // w = s^-1 mod q
-      if ((err = mp_invmod(s[i], prikey[i].q, w[i])) != CRYPT_OK) {
-         goto error;
-      }
-      // u1 = m*w mod q
-      if ((err = mp_read_unsigned_bin(u1[i], (unsigned char*)hash[i], hashlen[i])) != CRYPT_OK) {
-         goto error;
-      }
-      if ((err = mp_mulmod(u1[i], w[i], prikey[i].q, u1[i])) != CRYPT_OK) {
-         goto error;
-      }
-
-      // u2 = r*w mod q
-      if ((err = mp_mulmod(r[i], w[i], prikey[i].q, u2)) != CRYPT_OK) {
-         goto error;
-      }
-
-      // Left = g^u1 * y^u2 mod p
-      if ((err = mp_exptmod(prikey[i].g, u1[i], prikey[i].p, u1[i])) != CRYPT_OK) {
-         goto error;
-      }
-      if ((err = mp_exptmod(prikey[i].y, u2[i], prikey[i].p, u2[i])) != CRYPT_OK) {
-         goto error;
-      }
-      if ((err = mp_mulmod(u1[i], u2[i], prikey[i].p, v[i])) != CRYPT_OK) {
-         goto error;
-      }
-
-      ////////////
-      /*
-      if((err = mp_mod(v, prikey->q, v)) != CRYPT_OK) {
-         goto error;
-      }
-      */
-      ////////////
-
-      mp_add(Left, v[i], Left);
-      mp_mod(Left, prikey[i].p, Left);
-
-      mp_add(Right, r[i], Right);
-      mp_mod(Right, prikey[i].p, Right);
-   }
-
-   // Left ==? Right
-   if (mp_cmp(Left, Right) == LTC_MP_EQ) {
-      *stat = 1;
-   }
-   err = CRYPT_OK;
-
-error:
-   for (int i = 0; i < plen; i++) {
-      mp_clear_multi(w[i], v[i], u1[i], u2[i], NULL);
-   }
-   return err;
-}
-
 int DSA_Batch_sign_hash(const unsigned char* in, unsigned long inlen, unsigned char* out, unsigned long* outlen, prng_state* prng, int wprng, const dsa_key* prikey){
    void *r, *s;
    int err;
@@ -502,43 +414,6 @@ error:
    return err;
 }
 
-int DSA_Batch_verify_hash(const unsigned char* sig[], unsigned long siglen[], const unsigned char* hash[], unsigned long hashlen[], int* stat, const dsa_key prikey[], int para_len){
-   int err;
-   const int plen = para_len;
-   void *r[plen], *s[plen];
-
-   LTC_ARGCHK(stat != NULL);
-   *stat = 0;
-
-   for( int i = 0; i < para_len; i++) {
-      ltc_asn1_list sig_seq[2];
-      unsigned long reallen = 0;
-
-      if ((err = mp_init_multi(&(r[i]), &(s[i]), NULL)) != CRYPT_OK) {
-         return err;
-      }
-
-      LTC_SET_ASN1(sig_seq, 0, LTC_ASN1_INTEGER, r[i], 1UL);
-      LTC_SET_ASN1(sig_seq, 1, LTC_ASN1_INTEGER, s[i], 1UL);
-
-      err = der_decode_sequence_strict(sig[i], siglen[i], sig_seq, 2);
-      if (err != CRYPT_OK) {
-         goto LBL_ERR;
-      }
-
-      err = der_length_sequence(sig_seq, 2, &reallen);
-      if (err != CRYPT_OK || reallen != siglen[i]) {
-         goto LBL_ERR;
-      }
-   }
-
-   err = DSA_Batch_verify_hash_raw(r, s, hash, hashlen, stat, prikey, para_len);
-
-LBL_ERR:
-   ltc_deinit_multi(r, s, NULL);
-   return err;
-}
-
 int DSA_sign_NEO(const unsigned char* in, unsigned long in_len, unsigned char* out, unsigned long* out_len, const dsa_key* prikey){
    prng_state prng;
    int err = 0;
@@ -558,6 +433,134 @@ int DSA_sign_NEO(const unsigned char* in, unsigned long in_len, unsigned char* o
    return CRYPT_OK;
 }
 
-int DSA_verify_NEO(const unsigned char* sig[], unsigned long sig_len[], const unsigned char* hash[], unsigned long hash_len[], int* stat, const dsa_key prikey[], int para_len){
+int DSA_Batch_verify_hash_raw(void* r[], void* s[], const unsigned char hash[][16], unsigned long hashlen[], int* stat, dsa_key* prikey[], int para_len){
+   const int plen = para_len;
+   void *w, *v, *u1, *u2;
+   void *Left, *Right;
+   int err;
+
+   // LTC_ARGCHK(r != NULL);
+   // LTC_ARGCHK(s != NULL);
+   LTC_ARGCHK(stat != NULL);
+   LTC_ARGCHK(prikey[0] != NULL);
+
+   *stat = 0;
+   mp_init_multi(&Left, &Right, NULL);
+   for (int i = 0; i < plen; i++) {
+      if ((err = mp_init_multi(&w, &v, &u1, &u2, NULL)) != CRYPT_OK) {
+         return err;
+      }
+      //printf("%s\n", r[i]);
+      // r和s不能为空。(原始DSA不能大于q)
+      /*
+      if (mp_cmp_d(r, 0) != LTC_MP_GT || mp_cmp_d(s, 0) != LTC_MP_GT || mp_cmp(r, prikey->q) != LTC_MP_LT || mp_cmp(s, prikey->q) != LTC_MP_LT) {
+         err = CRYPT_INVALID_PACKET;
+         goto error;
+      }
+      */
+      void *R = r[i];
+      void *S = s[i];
+      if (mp_cmp_d(R, 0) != LTC_MP_GT || mp_cmp_d(S, 0) != LTC_MP_GT) {
+         err = CRYPT_INVALID_PACKET;
+         goto error;
+      }
+      hashlen[i] = MIN(hashlen[i], (unsigned long)(prikey[i]->qord));
+      // w = s^-1 mod q
+      if ((err = mp_invmod(S, prikey[i]->q, w)) != CRYPT_OK) {
+         goto error;
+      }
+      // u1 = m*w mod q
+      if ((err = mp_read_unsigned_bin(u1, (unsigned char*)hash[i], hashlen[i])) != CRYPT_OK) {
+         goto error;
+      }
+      if ((err = mp_mulmod(u1, w, prikey[i]->q, u1)) != CRYPT_OK) {
+         goto error;
+      }
+      // u2 = r*w mod q
+      if ((err = mp_mulmod(R, w, prikey[i]->q, u2)) != CRYPT_OK) {
+         goto error;
+      }
+      // Left = g^u1 * y^u2 mod p
+      if ((err = mp_exptmod(prikey[i]->g, u1, prikey[i]->p, u1)) != CRYPT_OK) {
+         goto error;
+      }
+      if ((err = mp_exptmod(prikey[i]->y, u2, prikey[i]->p, u2)) != CRYPT_OK) {
+         goto error;
+      }
+      if ((err = mp_mulmod(u1, u2, prikey[i]->p, v)) != CRYPT_OK) {
+         goto error;
+      }
+      ////////////
+      /*
+      if((err = mp_mod(v, prikey[i]->q, v)) != CRYPT_OK) {
+         goto error;
+      }
+      */
+      ////////////
+
+      // 检查单次认证是否相等
+      if ((mp_cmp(R, v) == LTC_MP_EQ)) {
+         printf("Try %d: one time verify successed!\n", i);
+      } else {
+         printf("Try %d: one time verify failed!\n", i);
+      }
+      
+
+      mp_add(Left, v, Left);
+      mp_mod(Left, prikey[i]->p, Left);
+
+      mp_add(Right, R, Right);
+      mp_mod(Right, prikey[i]->p, Right);
+   }
+
+   // Left ==? Right
+   if (mp_cmp(Left, Right) == LTC_MP_EQ) {
+      *stat = 1;
+   } else {
+      printf("FAILED!\n");
+   }
+   err = CRYPT_OK;
+
+error:
+   mp_clear_multi(w, v, u1, u2, NULL);
+   return err;
+}
+
+int DSA_Batch_verify_hash(const unsigned char sig[][1024], unsigned long* siglen, const unsigned char hash[][16], unsigned long hashlen[], int* stat, dsa_key* prikey[], int para_len){
+   int err;
+   const int plen = para_len;
+   void *r[plen], *s[plen];
+
+   LTC_ARGCHK(stat != NULL);
+   *stat = 0;
+   for( int i = 0; i < para_len; i++) {
+      ltc_asn1_list sig_seq[2];
+      unsigned long reallen = 0;
+      void **R = &r[i];
+      void **S = &s[i];
+      if ((err = mp_init_multi(R, S, NULL)) != CRYPT_OK) {
+         return err;
+      }
+      LTC_SET_ASN1(sig_seq, 0, LTC_ASN1_INTEGER, *R, 1UL);
+      LTC_SET_ASN1(sig_seq, 1, LTC_ASN1_INTEGER, *S, 1UL);
+
+      err = der_decode_sequence_strict(sig[i], siglen[i], sig_seq, 2);
+      if (err != CRYPT_OK) {
+         goto LBL_ERR;
+      }
+
+      err = der_length_sequence(sig_seq, 2, &reallen);
+      if (err != CRYPT_OK || reallen != siglen[i]) {
+         goto LBL_ERR;
+      }
+   }
+   err = DSA_Batch_verify_hash_raw(r, s, hash, hashlen, stat, prikey, para_len);
+
+LBL_ERR:
+   // ltc_deinit_multi(r, s, NULL);
+   return err;
+}
+
+int DSA_verify_NEO(const unsigned char sig[][1024], unsigned long sig_len[], const unsigned char hash[][16], unsigned long hash_len[], int* stat, dsa_key* prikey[], int para_len){
    return DSA_Batch_verify_hash(sig, sig_len, hash, hash_len, stat, prikey, para_len);
 }

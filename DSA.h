@@ -124,11 +124,13 @@ int DSA_decrypt_messgae(const unsigned char* buff, unsigned long buff_len, unsig
 int DSA_sign_hash(const unsigned char* in, unsigned long in_len, unsigned char* out, unsigned long* out_len, const dsa_key* prikey);
 int DSA_sign_verify(const unsigned char* sig, unsigned long sig_len, const unsigned char* hash, unsigned long hash_len, int* stat, const dsa_key* prikey);
 
-int DSA_Batch_sign_hash_raw(const unsigned char* in, unsigned long inlen, void* r, void* s, prng_state* prng, int wprng, const dsa_key* prikey);
-int DSA_Batch_verify_hash_raw(void* r[], void* s[], const unsigned char* hash[], unsigned long hashlen[], int* stat, const dsa_key prikey[], int para_len);
-int DSA_Batch_sign_hash(const unsigned char* in, unsigned long inlen, unsigned char* out, unsigned long* outlen, prng_state* prng, int wprng, const dsa_key* prikey);
-int DSA_Batch_verify_hash(const unsigned char* sig[], unsigned long siglen[], const unsigned char* hash[], unsigned long hashlen[], int* stat, const dsa_key prikey[], int para_len);
 
+int DSA_Batch_sign_hash_raw(const unsigned char* in, unsigned long inlen, void* r, void* s, prng_state* prng, int wprng, const dsa_key* prikey);
+int DSA_Batch_sign_hash(const unsigned char* in, unsigned long inlen, unsigned char* out, unsigned long* outlen, prng_state* prng, int wprng, const dsa_key* prikey);
 int DSA_sign_NEO(const unsigned char* in, unsigned long in_len, unsigned char* out, unsigned long* out_len, const dsa_key* prikey);
-int DSA_verify_NEO(const unsigned char* sig[], unsigned long sig_len[], const unsigned char* hash[], unsigned long hash_len[], int* stat, const dsa_key prikey[], int para_len);
+
+
+int DSA_Batch_verify_hash_raw(void* r[], void* s[], const unsigned char hash[][16], unsigned long hashlen[], int* stat, dsa_key* prikey[], int para_len);
+int DSA_Batch_verify_hash(const unsigned char sig[][1024], unsigned long* siglen, const unsigned char hash[][16], unsigned long hashlen[], int* stat, dsa_key* prikey[], int para_len);
+int DSA_verify_NEO(const unsigned char sig[][1024], unsigned long sig_len[], const unsigned char hash[][16], unsigned long hash_len[], int* stat, dsa_key* prikey[], int para_len);
 #endif //LIBTOM_DEMO_DSA_H
