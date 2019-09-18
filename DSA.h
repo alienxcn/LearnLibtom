@@ -117,8 +117,9 @@ static unsigned char dsaparam_der[] = {
  };
 
 int dsa_testp(void);
-int DSA_generator_from_pqg(const char* g, const char* p, const char* q, const char* x, const char* y, dsa_key* prikey, dsa_key* pubkey);
-int DSA_generator_from_pqg_random(dsa_key* prikey);
+int DSA_generator_from_pqgxy(const char* g, const char* p, const char* q, const char* x, const char* y, dsa_key* prikey, dsa_key* pubkey);
+int DSA_generator_from_pqg(const char* g, const char* p, const char* q, dsa_key* prikey);
+int DSA_generator_random(dsa_key* prikey);
 int DSA_encrypt_message(const unsigned char* msg, unsigned long msg_len, unsigned char* buff, unsigned long* buff_len, const dsa_key* prikey);
 int DSA_decrypt_messgae(const unsigned char* buff, unsigned long buff_len, unsigned char* orimsg, unsigned long* orimsg_len, const dsa_key* prikey);
 int DSA_sign_hash(const unsigned char* in, unsigned long in_len, unsigned char* out, unsigned long* out_len, const dsa_key* prikey);

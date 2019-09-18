@@ -137,7 +137,7 @@ int dsa_testp(void)
    return 0;
 }
 
-int DSA_generator_from_pqg(const char* g, const char* p, const char* q, const char* x, const char* y, dsa_key* prikey, dsa_key* pubkey){
+int DSA_generator_from_pqgxy(const char* g, const char* p, const char* q, const char* x, const char* y, dsa_key* prikey, dsa_key* pubkey){
    unsigned char key_parts[5][256];
    unsigned long key_lens[5];
    // unsigned long len;
@@ -179,11 +179,55 @@ int DSA_generator_from_pqg(const char* g, const char* p, const char* q, const ch
       printf("Pub Com Failed!\n");
    }
    */
-   printf("DSA_generator_from_pqg:  OK!\n");
+   printf("DSA_generator_from_pqgxy:  OK!\n");
    return CRYPT_OK;
 }
 
-int DSA_generator_from_pqg_random(dsa_key* prikey){
+int DSA_generator_from_pqg(const char* g, const char* p, const char* q, dsa_key* prikey){
+   unsigned char key_parts[3][256];
+   unsigned long key_lens[3];
+   const char* paras[3] = {p, q, g};
+
+   for (int i = 0; i < 3; i++){
+      key_lens[i] = sizeof(key_parts[i]);
+      radix_to_bin(paras[i], 16, key_parts[i], &key_lens[i]);
+   }
+   dsa_set_pqg(key_parts[0], key_lens[0],
+               key_parts[1], key_lens[1],
+               key_parts[2], key_lens[2],
+               prikey);
+
+   prng_state prng;
+   int err = 0;
+   /* register yarrow */
+   if (register_prng(&yarrow_desc) == -1) {
+      printf("Error registering Yarrow\n");
+      return -1;
+   }
+   /* setup the PRNG */
+   if ((err = rng_make_prng(128, find_prng("yarrow"), &prng, NULL)) != CRYPT_OK) {
+      printf("Error setting up PRNG, %s\n", error_to_string(err));
+      return -1;
+   }
+
+   // dsa_generate_pqg(&prng, find_prng("yarrow"), 20, 128, prikey);
+   dsa_generate_key(&prng, find_prng("yarrow"), prikey);
+
+   /*
+   int stat = 0;
+   dsa_verify_key(prikey, &stat);
+   if (stat == 0) {
+      printf("DSA_generator_random_NEO:  Failed!\n");
+      return CRYPT_FAIL_TESTVECTOR;
+   } else {
+      printf("DSA_generator_random_NEO:  OK!\n");
+      return CRYPT_OK;
+   }
+   */
+   return CRYPT_OK;
+}
+
+int DSA_generator_random(dsa_key* prikey){
    prng_state prng;
    int stat = 0, err = 0;
 
@@ -203,10 +247,10 @@ int DSA_generator_from_pqg_random(dsa_key* prikey){
 
    dsa_verify_key(prikey, &stat);
    if (stat == 0) {
-      printf("DSA_generator_from_pqg_random:  Failed!\n");
+      printf("DSA_generator_random:  Failed!\n");
       return CRYPT_FAIL_TESTVECTOR;
    } else {
-      printf("DSA_generator_from_pqg_random:  OK!\n");
+      printf("DSA_generator_random:  OK!\n");
       return CRYPT_OK;
    }
 }
@@ -497,13 +541,15 @@ int DSA_Batch_verify_hash_raw(void* r[], void* s[], const unsigned char hash[][1
       }
       */
       ////////////
-
+      
+      /*
       // 检查单次认证是否相等
       if ((mp_cmp(R, v) == LTC_MP_EQ)) {
          printf("Try %d: one time verify successed!\n", i);
       } else {
          printf("Try %d: one time verify failed!\n", i);
       }
+      */
       
 
       mp_add(Left, v, Left);
